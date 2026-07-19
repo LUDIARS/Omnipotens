@@ -1,6 +1,6 @@
-# Omnipotents
+# Omnipotens
 
-Omnipotentsは、ゲームプロジェクトの企画意図・ルール・実装・プレイ体験・市場性から、サービス提供に必要な領域までを、根拠と不確実性を明示しながら一つのレポートへ接続する「全方位分析スキル」です。
+Omnipotensは、ゲームプロジェクトの企画意図・ルール・実装・プレイ体験・市場性から、サービス提供に必要な領域までを、根拠と不確実性を明示しながら一つのレポートへ接続する「全方位分析スキル」です。
 
 ここでいう「全方位」は、毎回すべてを分析するという意味ではありません。GUIまたはJSON run planで、今回の判断に必要なcore段階とservice領域だけを選びます。未選択項目は`not-requested`として残し、取得できない根拠を推測やzero scoreで補いません。最終reportも選択項目であり、未選択なら既存artifactを保持したままplaceholder reportは作りません。Diを実行前から除外した場合も`accepted-omission`ではなく`not-requested`です。
 
@@ -82,7 +82,7 @@ UXと市場性の分析では、レビュー済みのVitiaスキルを明示的�
 
 ## GUIで分析範囲を選ぶ
 
-Windows用plannerをbuildすると、core 11段階とservice 14領域をcheckbox、preset、工数、必要証拠、dependency warning付きで選択できます。単一exeに選択catalogを同梱するため、分析対象projectへOmnipotents一式をコピーする必要はありません。
+Windows用プランナーをビルドすると、基本11段階とサービス14領域をチェックボックス、プリセット、工数、必要証拠、依存関係の警告付きで選択できます。単一の実行ファイルに選択カタログを同梱するため、分析対象プロジェクトへOmnipotens一式をコピーする必要はありません。
 
 ```powershell
 ./scripts/Publish-OmnipotensPlanner.ps1
@@ -114,6 +114,8 @@ Set-Location Omnipotents
 claude
 ```
 
+GitHubリポジトリ名と既存フォルダ名は互換性のため旧表記 `Omnipotents` のままですが、製品名は `Omnipotens` です。
+
 起動後、たとえば次のように依頼します。
 
 ```text
@@ -133,6 +135,9 @@ OmnipotensでXXXを解析して
 - `spec/data/`: ツール入力、監査結果、マニフェスト
 - `report/stages/`: 段階別HTMLレポート
 - `report/omnipotens-final.html`: 利用可能な分析結果を統合した最終レポート
+- `report/omnipotens-summary.json`: EducationLabなどが利用する検証済み解析サマリ
+
+最終レポートは「学生・初学者向け」と「高解像度データ」を切り替えて表示します。AI FormatとVitiaのスコアは表で示し、Vitiaは高得点順、市場優位性がある行は太字になります。各分析項目の末尾には不足情報と不足実装を明記し、Ludusの新規性評価と遊びの辞書からUXへつなぐ実装提案を必須にしています。
 
 ## リポジトリの内容
 
