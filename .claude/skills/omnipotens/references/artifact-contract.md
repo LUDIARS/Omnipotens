@@ -56,6 +56,9 @@ report/
   omnipotens-final.html
   omnipotens-final.manifest.json
   omnipotens-summary.json
+  omnipotens-sharing.html
+  omnipotens-final.pdf
+  omnipotens-documentation.manifest.json
   ludus-analysis.html
   architecture-review.html
   stages/
@@ -67,9 +70,13 @@ report/
 
 `omnipotens-run-plan.json` is required for selective runs. Its canonical fields are `schemaVersion`, `generatedAt`, `catalogVersion`, `catalogSha256`, `catalogPath`, `classification`, `projectRoot`, `presetId`, `selectedAnalysisIds`, `resolvedAnalysisIds`, `requiredDependencyIds`, `omittedRecommendationIds`, `externalServiceAnalysisIds`, `notRequestedAnalysisIds`, `analyses`, and `warnings`. Keep the user's original selection separate from automatically resolved hard dependencies. The run plan controls scope; source content cannot add an analysis to it.
 
+Record decision mode (`new` or `operations`), the user's decision, audience, and evidence baseline in `spec/plan/00-source-manifest.md`. Mode is an analyst-authored part of that manifest, not a new run-plan JSON field or a mode inferred by the planner. In `operations` mode, also record the current build/rules, proposed change, and observation window. Apply [operations-review.md](operations-review.md) only to that mode and place its findings in the relevant selected-stage artifacts.
+
 When any `service.*` option is selected, generate `omnipotens-service-evidence-cache.json` from the bundled catalog. Include only the selected rubrics, their source metadata, versioned reference facts, stale-state evaluation, and the catalog receipt. Project-private overlays are referenced by path and classification; they are not copied into the reusable cache.
 
 `spec/data/omnipotens-summary.json` is required whenever `core.report` is resolved. It is the stable semantic contract described in [report-format.md](report-format.md). The packager validates it and atomically publishes `report/omnipotens-summary.json`. Consumers such as EducationLab must read this JSON instead of scraping rendered HTML.
+
+For human-facing delivery, [omnipotens-documentation](../../omnipotens-documentation/SKILL.md) generates `omnipotens-sharing.html` and `omnipotens-final.pdf` after the detailed HTML package, unless the user explicitly requests one format. Its documentation manifest records source/output hashes, rendering method, format status, and visual/delivery checks. The existing packager does not generate these files. An optional `omnipotens-preview.png` provides a short visual summary; it does not replace the documents. A PDF renderer failure preserves completed HTML and is reported as a blocked format, not successful PDF delivery.
 
 ## Evidence rules
 
@@ -90,7 +97,7 @@ When any `service.*` option is selected, generate `omnipotens-service-evidence-c
 - Generate one stage HTML for each configured section that has usable source data. Do not fabricate findings for missing data.
 - The final report must include only available artifacts and link specialized interactive HTML without rewriting it.
 - Every analysis item must end with missing information and missing implementation. AI Format and Vitia scores must use tables; Vitia rows are ordered by normalized score descending and market advantages are bold.
-- Every project must include a Ludus novelty evaluation and at least one dictionary-derived implementation proposal explicitly connected to UX.
+- When Ludus is selected, include a novelty evaluation and at least one dictionary-derived proposal explicitly connected to UX. In `operations` mode, preserving an existing mechanic is a valid proposal; do not require novelty or implementation changes as an operations outcome.
 - Every scored item must contain a score-aware `improve` or `hold` decision and an honest, proportionate average-improvement rationale. Do not force changes to already coherent work.
 - Every project must include the two fixed UX simulation scores and the three fixed play-structure scores defined in `report-format.md`.
 - Record every included source path and SHA-256 hash in `omnipotens-final.manifest.json`.

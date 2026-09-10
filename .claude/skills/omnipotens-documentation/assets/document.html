@@ -1,0 +1,149 @@
+<!doctype html>
+<!-- @implements SPEC-OM-DOCUMENTATION -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Omnipotens 資料テンプレート</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #192c3a;
+      --muted: #495c69;
+      --accent: #125f5a;
+      --line: #c8d6d8;
+      --paper: #ffffff;
+      --wash: #eef5f3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #e8eeed;
+      font: 17px/1.75 "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+      overflow-wrap: anywhere;
+    }
+    main { max-width: 760px; margin: auto; padding: 24px 16px 48px; }
+    header, section, footer { margin-block: 0 24px; }
+    header { border-top: 6px solid var(--accent); padding-top: 18px; }
+    h1 { font-size: clamp(26px, 6vw, 38px); line-height: 1.35; margin: 12px 0; }
+    h2 { font-size: 23px; line-height: 1.45; margin: 0 0 16px; }
+    h3 { font-size: 19px; line-height: 1.5; margin: 0 0 10px; }
+    h4 { font-size: 17px; margin: 18px 0 4px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--accent); text-underline-offset: .2em; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .eyebrow, .meta { color: var(--muted); font-size: 14px; }
+    .eyebrow { font-weight: 700; letter-spacing: .08em; }
+    .lead { padding: 20px; background: var(--accent); color: white; border-radius: 12px; }
+    .card { padding: 20px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+    .card + .card { margin-top: 14px; }
+    .status { display: inline-block; color: var(--accent); background: var(--wash); padding: 3px 10px; border-radius: 6px; font-weight: 700; }
+    dl { margin: 0; }
+    dt { font-weight: 700; margin-top: 12px; }
+    dd { margin: 0; }
+    ul, ol { margin: 0 0 12px; padding-left: 1.4em; }
+    li + li { margin-top: 6px; }
+    .axes { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 16px 0; }
+    .axis { padding: 12px; background: var(--wash); border-left: 4px solid var(--accent); }
+    .axis strong { display: block; }
+    .boundary { border-top: 2px solid var(--line); padding-top: 24px; }
+    figure { margin: 16px 0; }
+    img, svg { max-width: 100%; height: auto; }
+    figcaption { font-size: 14px; color: var(--muted); }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 8px 6px; }
+    th { background: var(--wash); }
+    @page { size: 100mm 178mm; margin: 6mm; }
+    @media print {
+      body { background: white; color: #192c3a; font-size: 12pt; line-height: 1.6; }
+      main { max-width: none; padding: 0; }
+      header, section, footer { margin-bottom: 6mm; }
+      h1 { font-size: 23pt; }
+      h2 { font-size: 17pt; }
+      h3 { font-size: 14pt; }
+      h4 { font-size: 12pt; }
+      .eyebrow, .meta, figcaption { font-size: 10pt; }
+      .lead { color: #192c3a; background: white; border: 2px solid var(--accent); }
+      .lead, .card { padding: 4mm; border-radius: 2mm; }
+      .axis { background: white; border: 1px solid var(--line); border-left: 3px solid var(--accent); }
+      .status { color: #192c3a; background: white; border: 1px solid var(--line); }
+      h1, h2, h3, h4, dt { break-after: avoid; }
+      p, li { orphans: 3; widows: 3; }
+      .short-card, figure, tr { break-inside: avoid; }
+      .chapter { break-before: page; }
+      a { color: #125f5a; }
+      .screen-only { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 構造と組版の例。説明を実際の資料へ置き換えてから出力する。 -->
+  <main>
+    <header>
+      <div class="eyebrow">OMNIPOTENS / DOCUMENTATION</div>
+      <h1>結論から読める資料</h1>
+      <p class="meta">資料名・版・日付・対象読者・全文／抜粋の範囲をここに記載</p>
+      <div class="lead">
+        <h2>最初に、判断に必要な結論</h2>
+        <p>何が分かり、何を決めたいのかを短く示します。重要な限界も結論の近くに置きます。</p>
+      </div>
+    </header>
+    <section aria-labelledby="scope">
+      <h2 id="scope">対象と判断の範囲</h2>
+      <div class="card">
+        <dl>
+          <dt>対象・モード</dt>
+          <dd>既存資料の対象、new / operations、対象者を引き継ぎます。</dd>
+          <dt>証拠と状態</dt>
+          <dd>確認した版、観測範囲、分析状態、未確認事項を明示します。</dd>
+        </dl>
+      </div>
+    </section>
+    <section class="chapter" aria-labelledby="beginner">
+      <h2 id="beginner">学生・初学者向け</h2>
+      <div class="card">
+        <h3>総合評価と各項目のまとめ</h3>
+        <p>Omnipotensの最終資料では、正本サマリの総合評価と、選択された各項目の説明をここに展開します。</p>
+        <h4>不足情報</h4><p>入力に記録された不足情報を記載します。</p>
+        <h4>不足実装</h4><p>入力に記録された不足実装を記載します。</p>
+      </div>
+    </section>
+    <section class="chapter" aria-labelledby="detail">
+      <h2 id="detail">高解像度データ</h2>
+      <div class="card">
+        <h3>総合評価と各項目の詳細なまとめ</h3>
+        <p>詳細プロフィールも静的な本文として収め、PDFで切替先の内容が消えないようにします。</p>
+        <h4>不足情報</h4><p>入力に記録された不足情報を記載します。</p>
+        <h4>不足実装</h4><p>入力に記録された不足実装を記載します。</p>
+      </div>
+    </section>
+    <section class="chapter boundary" aria-labelledby="evidence">
+      <h2 id="evidence">各レイヤでの解析データは以下</h2>
+      <article class="card">
+        <h3>1項目を1カードで読む</h3>
+        <p class="status">テンプレート例・未評価</p>
+        <p>横長の表に詰め込まず、数値と説明を対応づけて並べます。</p>
+        <div class="axes" aria-label="Vitiaの独立した評価軸の表示例">
+          <div class="axis"><strong>価値：未評価</strong>誰に、どのような価値があるか。</div>
+          <div class="axis"><strong>パフォーマンス：未評価</strong>その価値を届ける裏付けと土壌。</div>
+        </div>
+        <dl>
+          <dt>根拠・確度</dt><dd>出典と確認範囲を記載します。</dd>
+          <dt>判断</dt><dd>既存の改善／維持の判断と理由を引き継ぎます。</dd>
+        </dl>
+        <h4>不足情報</h4><p>未確認をゼロ点として埋めません。</p>
+        <h4>不足実装</h4><p>資料化のために実装課題を作りません。</p>
+      </article>
+    </section>
+    <section class="chapter" aria-labelledby="sources">
+      <h2 id="sources">出典と次の判断</h2>
+      <div class="card">
+        <p>資料名、版、参照箇所と、次に決めることを記載します。根拠の説明はこのファイル内にも残します。</p>
+      </div>
+    </section>
+    <footer class="meta">組版用テンプレート。プロジェクトの評価結果ではありません。</footer>
+  </main>
+</body>
+</html>

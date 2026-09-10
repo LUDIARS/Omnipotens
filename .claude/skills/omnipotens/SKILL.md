@@ -1,6 +1,6 @@
 ---
 name: omnipotens
-description: Plan and run a selectable, evidence-linked game analysis covering the eleven core design/code/UX stages plus optional feasibility, QA/release, operations, data, security, LiveOps, business, legal/region, PEGI/USK/GRAC ratings, console certification, SBOM/vendor risk, child safety, and generative-AI governance. Use for focused or full-spectrum game reviews, design-code alignment audits, release and live-service readiness, marketability assessments, or runs that need a GUI-authored scope and a pinned academic/authoritative evidence cache.
+description: Plan and run a selectable, evidence-linked game analysis with distinct new-development and operations decision criteria, covering the eleven core design/code/UX stages plus optional feasibility, QA/release, operations, data, security, LiveOps, business, legal/region, PEGI/USK/GRAC ratings, console certification, SBOM/vendor risk, child safety, and generative-AI governance. Use for focused or full-spectrum game reviews, design-code alignment audits, release and live-service readiness, marketability assessments, or runs that need a GUI-authored scope and a pinned academic/authoritative evidence cache.
 ---
 
 # Omnipotens
@@ -20,7 +20,7 @@ Produce an evidence-linked review that connects game intent, rules, implementati
 - For every scored item, inspect the score and evidence before choosing `improve` or `hold`. Give one ordinary, proportionate improvement only when a real problem remains; otherwise explicitly recommend holding the current design. Never improve merely to fill the field.
 - Score UX on exactly two axes: alignment between the core experience design and implementation, and the conviction/performance of expression (the “this feels right” response). Label this as an AI simulation of average public response, not observed audience data, and record its audience model, assumptions, and limitations.
 - Score play structure on exactly three axes: idea, structure, and scalability. Judge idea by dictionary-external play and low-similarity mashups; structure by the mechanics-driven loop and avoidable structure; scalability by whether mechanics and the internal economy can produce meaningful play variations.
-- Always evaluate novelty in the Ludus analysis. Derive at least one implementation proposal from the play dictionary and connect it explicitly to UX.
+- Evaluate novelty when Ludus is selected. In `new` mode, derive a dictionary-based implementation proposal with an explicit UX connection. In `operations` mode, a proposal may preserve an existing dictionary-backed mechanic; novelty alone does not justify changing a working experience.
 - Record both complete executive-summary profiles in `spec/data/omnipotens-summary.json`. Stage 11 validates it, publishes `report/omnipotens-summary.json`, and renders one switchable summary area before the raw score and evidence layers. Follow [references/report-format.md](references/report-format.md).
 
 ## Start the run
@@ -39,6 +39,12 @@ Produce an evidence-linked review that connects game intent, rules, implementati
 When retrieving a public planning page, use the user's requested access method. If they request ordinary Web access, open or fetch the public page and its browser-loaded resources rather than switching to a workspace connector.
 
 ## Select the run scope
+
+First identify the decision mode from the user's request: `new` (新規開発) or `operations` (運用中の体験・変更判断). Record the mode, decision, audience, and evidence baseline in `spec/plan/00-source-manifest.md`. If the request does not establish the mode, clarify it before mode-dependent analysis. A running server, release status, or selected preset alone does not establish the mode. For mixed work, separate the two decisions and their evidence.
+
+In `new` mode, judge the intended experience, distinct appeal, and feasibility. Use Ludus for play hypotheses, Vitia for audience value and delivery evidence, and Anatomia / AI Format for implementation questions. Select feasibility or release analyses only when the decision needs them. Do not load or apply the operations-only checklist or require historical player data for a new concept.
+
+In `operations` mode, read [references/operations-review.md](references/operations-review.md). Judge the proposed change against the current experience, including improvement, retained value, and potential loss. Choose skills and service analyses for that change; do not require a new mechanic merely to satisfy a proposal field.
 
 Create or load `spec/data/omnipotens-run-plan.json` before deep analysis. The plan must use the canonical fields `schemaVersion`, `generatedAt`, `catalogVersion`, `catalogSha256`, `catalogPath`, `classification`, `projectRoot`, `presetId`, `selectedAnalysisIds`, `resolvedAnalysisIds`, `requiredDependencyIds`, `omittedRecommendationIds`, `externalServiceAnalysisIds`, `notRequestedAnalysisIds`, `analyses`, and `warnings`. This pins the catalog, records the original choice separately from hard dependencies, and makes every unselected or external-service option explicit.
 
@@ -68,7 +74,7 @@ The eleven stages remain the core dependency graph. Execute only the selected st
 - Store only the referenced Ludus version or commit, selected stable IDs, applicability rationale, local overrides, and findings in the game repository.
 - Keep project-specific knowledge as a local overlay. Never copy the entire dictionary or write findings back to Ludus automatically.
 - Generate a self-contained HTML play analysis under the project-root `report/` directory.
-- Score and explain novelty against the selected dictionary entries. Send dictionary-derived implementation proposals to stage 8 with an explicit UX effect; this is mandatory for every project.
+- Score and explain novelty against the selected dictionary entries. Send dictionary-derived proposals to stage 8 with an explicit UX effect. In `operations` mode, explicitly retaining a successful mechanic is a valid proposal; assess any new mechanic against existing learning, choices, and player investment.
 
 ### 3. Model the game domains
 
@@ -146,7 +152,8 @@ The eleven stages remain the core dependency graph. Execute only the selected st
 - Consolidate all available stage narratives, statuses, evidence summaries, and links to specialized interactive HTML into `<project>/report/omnipotens-final.html`.
 - Write `<project>/report/omnipotens-final.manifest.json` with included source paths and SHA-256 hashes.
 - Validate `spec/data/omnipotens-summary.json`, publish its normalized form as `<project>/report/omnipotens-summary.json`, and use it as the stable data source for EducationLab and other report browsers.
-- Fail only when no usable artifacts exist at all or an existing input artifact is malformed. A missing optional stage is not an error.
+- Apply [omnipotens-documentation](../omnipotens-documentation/SKILL.md) after packaging to generate the mobile-readable `report/omnipotens-sharing.html` and `report/omnipotens-final.pdf` from the same evidence. These are the default human-facing deliverables; an explicit format restriction takes precedence. Preserve both summary profiles in the PDF and make the sharing HTML self-contained without requiring hosting.
+- For the detailed HTML package, fail when no usable artifacts exist at all or an existing input artifact is malformed. A missing optional stage is not an error. Track PDF/sharing generation failures separately, retaining the completed analysis and HTML outputs.
 
 Run the deterministic packager:
 
@@ -156,7 +163,7 @@ node <skill>/scripts/omnipotens-report.mjs --project <project-root> [--spec <spe
 
 Repeat `--include` for review artifacts stored outside the standard `spec/` layout. Report generation packages evidence; it does not change a partial run into a completed analysis.
 
-The packager uses only Node.js standard modules. It recursively discovers AI Format categories, renders the configured sections or each Markdown source, links specialized HTML/JSON, and writes a hash manifest. The default layout path is `spec/data/omnipotens-report-layout.json`. Mermaid blocks remain readable source in the generic renderer; use the specialized Anatomia HTML for interactive graphs.
+The packager uses only Node.js standard modules. It recursively discovers AI Format categories, renders the configured sections or each Markdown source, links specialized HTML/JSON, and writes a hash manifest. The default layout path is `spec/data/omnipotens-report-layout.json`. Mermaid blocks remain readable source in the generic renderer; use the specialized Anatomia HTML for interactive graphs. This command produces the detailed HTML package, not the PDF or sharing HTML; the documentation skill owns those subsequent outputs and their generation record. If PDF rendering is unavailable, keep the completed HTML and report PDF generation as blocked instead of declaring document delivery complete.
 
 ## Run selected service domains
 
@@ -191,5 +198,6 @@ Do not average `not-applicable`, convert unknowns to zero, or introduce universa
 - Validate the run plan, catalog hash, selected service evidence cache, stale source metadata and reference facts, and omitted recommended dependencies.
 - Use deterministic renderers for Markdown and Anatomia reports when available; do not edit source review Markdown merely to improve rendering.
 - Verify links, Japanese UTF-8 rendering, graphs, search and tabs, responsive layout, and print layout.
+- For requested human-facing documents, follow the documentation skill's PDF/HTML rendering and delivery checks. Keep its output hashes and verification state separate from the analysis packager's source manifest.
 - Report completed stages, blocked stages, source and commit pins, top findings, and exact artifact paths.
 - Declare completion only when all required stages pass or the user explicitly accepts recorded omissions.

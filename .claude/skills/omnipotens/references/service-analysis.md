@@ -2,6 +2,8 @@
 
 Use this reference when the run includes any `service.*` option or when analysis scope must be reduced. The source of truth for selectable options, presets, rubrics, source rights, and versioned facts is [service-analysis-catalog.json](service-analysis-catalog.json).
 
+Select the decision mode in `SKILL.md` first. `operations` mode is a review of an existing player experience and its proposed changes; it is distinct from the optional backend analysis `service.operations`. Use [operations-review.md](operations-review.md) only for that mode. Neither a mode nor a catalog preset automatically adds service analyses. New-development release planning can select relevant service analyses without adopting the operations-only player-value checklist.
+
 ## Select scope before reading deeply
 
 1. Create or load `spec/data/omnipotens-run-plan.json`. Preserve the canonical selected, resolved, required-dependency, omitted-recommendation, external-service, and not-requested ID lists instead of collapsing them into one selection.

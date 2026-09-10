@@ -1,0 +1,14 @@
+{
+  "name": "documentation",
+  "description": "Omnipotensの分析・設計・判断資料を、根拠と範囲を保ったスマホ向けPDFと単体HTMLへ組版し、生成・確認・配布の状態を記録する。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens-documentation/" },
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/SKILL\\.md$" },
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/references/(artifact-contract|report-format)\\.md$" },
+    { "pathPattern": "(^|/)spec/feature/documentation\\.md$" },
+    { "pathPattern": "(^|/)spec/domains/documentation\\.domain\\.json$" },
+    { "pathPattern": "^README\\.md$" }
+  ]
+}

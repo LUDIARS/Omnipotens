@@ -1,0 +1,4 @@
+interface:
+  display_name: "Omnipotens Documentation"
+  short_description: "分析・設計・判断資料を、スマホで読めるPDFと単体HTMLに仕上げる"
+  default_prompt: "Use $omnipotens-documentation to turn the supplied Omnipotens findings into a mobile-readable PDF and self-contained HTML, preserving evidence and uncertainty without requiring hosting."

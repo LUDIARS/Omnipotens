@@ -15,9 +15,17 @@ Omnipotensは、ゲームプロジェクトの企画意図・ルール・実装�
 | UXとオンボーディング | 行動発見、学習、フィードバック、エラー回復、公平性、アクセシビリティ、長時間プレイの負荷 |
 | 収益化と市場性 | 対象プレイヤー、欲求、差別化、訴求根拠、競合上の位置づけ、価格・課金境界、主張のリスク |
 | release・認証・保護 | 地域別rating、console認証、SBOM、vendor、child safety、生成AI governance |
-| 統合判断とレポート | Diによる論点整理と、各分析の状態・根拠・優先提案を結ぶ最終HTMLレポート |
+| 統合判断とレポート | Diによる論点整理と、各分析の状態・根拠・優先提案を結ぶPDF / HTML資料 |
 
 Diによる議論とレポート生成は、分析結果を統合・出力する工程です。独立した分析領域として「全方位」の数を増やすための項目ではありません。
+
+## 新規と運用の判断モード
+
+依頼内容から `new`（新規開発）と `operations`（運用中の体験・変更判断）を選び、判断対象・プレイヤー層・証拠の基準とともに `spec/plan/00-source-manifest.md` へ記録します。モードが不明な場合は確認します。GUIのプリセットやサーバーの有無だけでは判定しません。
+
+新規では、狙う体験・魅力・実現性に応じて Ludus、Vitia、Anatomia / AI Format と必要な分析を選びます。運用では、現状に対する改善効果と維持すべき価値を基準に選び、必要に応じて行動データ、LiveOps、サービス運用を加えます。各分析の選択と依存関係は既存の run plan で管理します。
+
+運用専用の追加観点は、体験の一貫性、意味のある選択と学習、継続利用の段階ごとの価値、変更で失われる価値の4点です。新規には適用しません。運用では既存のよい仕組みを維持する判断も提案として扱います。詳細は [運用レビュー](.claude/skills/omnipotens/references/operations-review.md) を参照してください。
 
 ## 分析の原則
 
@@ -53,7 +61,7 @@ UXと市場性の分析では、レビュー済みのVitiaスキルを明示的�
 8. VitiaによるUX・オンボーディング分析
 9. Vitiaによる市場性分析
 10. Diディスカッションペーパーの作成
-11. 最終HTMLレポートの生成
+11. 最終HTMLレポートと、スマホ向けPDF / 配布版HTMLの生成
 
 各段階の入力、出力、停止条件は [SKILL.md](.claude/skills/omnipotens/SKILL.md) と [artifact-contract.md](.claude/skills/omnipotens/references/artifact-contract.md) を参照してください。
 
@@ -106,7 +114,7 @@ source本文は同梱しません。再配布が明示的に許諾されてい�
 
 ## Claude Codeで使う
 
-サブモジュールを含めてクローンし、このリポジトリをプロジェクトとしてClaude Codeで開きます。スキルは `.claude/skills/omnipotens` にあるため、追加の導入操作は不要です。
+サブモジュールを含めてクローンし、このリポジトリをプロジェクトとしてClaude Codeで開きます。分析スキルと資料作成スキルは `.claude/skills/` にあるため、追加の導入操作は不要です。
 
 ```powershell
 git clone --recurse-submodules https://github.com/LUDIARS/Omnipotents.git
@@ -135,15 +143,31 @@ OmnipotensでXXXを解析して
 - `spec/data/`: ツール入力、監査結果、マニフェスト
 - `report/stages/`: 段階別HTMLレポート
 - `report/omnipotens-final.html`: 利用可能な分析結果を統合した最終レポート
+- `report/omnipotens-sharing.html`: 別の置き場がなくても手元で読める、単体のスマホ向け配布版
+- `report/omnipotens-final.pdf`: Slackなどへの直接添付に使うスマホ向けPDF
+- `report/omnipotens-documentation.manifest.json`: 資料の入力・出力ハッシュ、生成方法、確認・配送状態
 - `report/omnipotens-summary.json`: EducationLabなどが利用する検証済み解析サマリ
 
-最終レポートは、統合エグゼクティブサマリ全体を「学生・初学者向け」と「高解像度データ」で切り替えられます。総合評価と各項目の要点に続いて「各レイヤでの解析データは以下」という境界を置き、その後に技術的な解析データを示します。AI FormatとVitiaのスコアは表で示し、Vitiaは高得点順、市場優位性がある行は太字になります。各分析項目の末尾には不足情報と不足実装を明記し、Ludusの新規性評価と遊びの辞書からUXへつなぐ実装提案を必須にしています。
+最終レポートは、統合エグゼクティブサマリ全体を「学生・初学者向け」と「高解像度データ」で切り替えられます。総合評価と各項目の要点に続いて「各レイヤでの解析データは以下」という境界を置き、その後に技術的な解析データを示します。AI FormatとVitiaのスコアは表で示し、Vitiaは高得点順、市場優位性がある行は太字になります。各分析項目の末尾には不足情報と不足実装を明記します。Ludusを選択した場合は新規性を評価し、遊びの辞書からUXへつなぐ提案を示します。運用では、根拠のある現状維持も提案として扱います。
 
 遊びの構造は「発想・構造・量産性」、UXは「体験設計のコアと実装の方向一致・表現の納得性／パフォーマンス」の固定軸で採点します。UXの大衆評価は実測値ではなく、前提と限界を明記したAI平均反応シミュレーションです。各スコアを見て、課題がある場合だけ平均的で過剰でない改善案を出し、変更が利益にならない場合は正直に現状維持と判断します。
+
+## 読みやすい資料を作る
+
+[omnipotens-documentation](.claude/skills/omnipotens-documentation/SKILL.md) は、分析結果や設計・判断資料をPDFとHTMLの両方に仕上げます。スマホ向けの縦長・1列・大きめの文字を基本にし、PDFを直接添付する運用なのでホスティングを必要としません。必要に応じて要約画像も添えます。共有先への投稿は、ユーザーが依頼した範囲と会社の権限に従います。
+
+```text
+omnipotens-documentationで、この分析結果をスマホ向けPDFと単体HTMLにして
+```
+
+最終レポート生成では、既存のHTML packagerの後に資料作成スキルを適用します。packager単体ではPDFを生成しません。PDFには利用可能で許可されたローカルのレンダラーが必要で、使えない場合はPDF生成を未完了として報告します。MarkdownとJSONは根拠・編集用の正本として残します。
+
+会社用パッケージを作る場合は、既存の `New-OmnipotensCompanyPackage.ps1` の `-SourceSkillsRoot` に `.claude/skills`、`-SkillNames` に `omnipotens,omnipotens-documentation` を指定し、両スキルを同梱します。
 
 ## リポジトリの内容
 
 - `.claude/skills/omnipotens/`: 分析パイプラインとレポート生成スクリプト
+- `.claude/skills/omnipotens-documentation/`: PDF / HTMLの資料作成手順とスマホ向けHTMLテンプレート
 - `tools/Omnipotens.AnalysisPlanner/`: 分析範囲を選択してrun planを保存するWindows GUI
 - `dependencies/Anatomia/`: コード・ドメイン分析（Git submodule）
 - `dependencies/Ludus/`: プレイ分類・OKF辞書（Git submodule）
