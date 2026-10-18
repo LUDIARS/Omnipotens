@@ -29,6 +29,7 @@ export async function runReportHardeningTests() {
     parseReportArgs(['--project', 'fixture', '--include', 'a.md', '--include', 'b.md']),
     { project: 'fixture', include: ['a.md', 'b.md'] },
   );
+  assert.deepEqual(parseReportArgs(['--project', 'fixture', '--lang', 'en']), { project: 'fixture', include: [], language: 'en' });
   assert.throws(() => parseReportArgs(['--project', 'fixture', '--unknown', 'x']), /unknown option/);
   assert.throws(() => parseReportArgs(['--project', 'one', '--project', 'two']), /duplicate option/);
   assert.throws(() => parseReportArgs(['--project']), /missing value/);

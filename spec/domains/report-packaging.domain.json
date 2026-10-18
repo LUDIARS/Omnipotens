@@ -1,0 +1,13 @@
+{
+  "name": "report-packaging",
+  "description": "Omnipotensの分析成果物をAI Format分類で集め、指定言語(ja/en)のUIで詳細HTMLの最終レポートとハッシュマニフェストへ組み立てる。証拠資料は原文のまま保持し、PDF・共有HTMLはdocumentationが担う。",
+  "presetRules": [],
+  "templateRules": [],
+  "membership": [
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/scripts/omnipotens-report\\.mjs$" },
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/scripts/lib/(generate-report|language|report-[a-z-]+|page|markdown)\\.mjs$" },
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/scripts/test(-report-[a-z-]+)?\\.mjs$" },
+    { "pathPattern": "(^|/)\\.claude/skills/omnipotens/agents/openai\\.yaml$" },
+    { "pathPattern": "(^|/)spec/domains/report-packaging\\.domain\\.json$" }
+  ]
+}

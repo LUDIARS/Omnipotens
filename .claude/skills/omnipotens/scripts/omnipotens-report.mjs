@@ -12,6 +12,7 @@ async function main() {
     output: args.output ? resolve(args.output) : undefined,
     layoutPath: args.layout ? resolve(args.layout) : undefined,
     title: args.title,
+    language: args.language,
     includes: args.include.map((item) => resolve(item)),
     generatedAt: args['generated-at'] ?? '',
   });

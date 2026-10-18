@@ -17,6 +17,16 @@ Omnipotensは、ゲームプロジェクトの企画意図・ルール・実装�
 | release・認証・保護 | 地域別rating、console認証、SBOM、vendor、child safety、生成AI governance |
 | 統合判断とレポート | Diによる論点整理と、各分析の状態・根拠・優先提案を結ぶPDF / HTML資料 |
 
+## 最終レポートの言語
+
+最終 HTML の UI 言語は `--language ja|en`（`--lang` も可）で指定できます。ツールを直接実行した場合の既定は日本語です。入力された証拠資料は原文のまま保持します。
+
+```powershell
+node ./.claude/skills/omnipotens/scripts/omnipotens-report.mjs `
+  --project <対象プロジェクトのパス> `
+  --language ja
+```
+
 Diによる議論とレポート生成は、分析結果を統合・出力する工程です。独立した分析領域として「全方位」の数を増やすための項目ではありません。
 
 ## 新規と運用の判断モード

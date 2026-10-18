@@ -3,6 +3,7 @@ import { basename, dirname, extname, relative, resolve } from 'node:path';
 import { discoverFiles, discoverTopLevelFiles } from './files.mjs';
 import { windowsSafePathKey } from './report-path-boundary.mjs';
 import { enrichArtifact } from './report-renderer.mjs';
+import { reportText } from './language.mjs';
 
 const ARTIFACT_KINDS = new Map([
   ['.md', 'markdown'],
@@ -118,7 +119,7 @@ function artifactKind(filePath) {
   return kind;
 }
 
-async function readArtifact({ boundary, project, filePath, stageId, stageTitle, explicit = false }) {
+async function readArtifact({ boundary, project, filePath, stageId, stageTitle, explicit = false, language = 'ja' }) {
   const kind = artifactKind(filePath);
   const content = await boundary.readTextFile(filePath, 'Report artifact');
   const artifact = {
@@ -131,7 +132,7 @@ async function readArtifact({ boundary, project, filePath, stageId, stageTitle, 
     explicit,
   };
   try {
-    return { ...enrichArtifact(artifact, content), sha256: sha256(content) };
+    return { ...enrichArtifact(artifact, content, language), sha256: sha256(content) };
   } catch (error) {
     throw new Error(`Invalid ${kind} report artifact: ${filePath}`, { cause: error });
   }
@@ -149,7 +150,7 @@ async function safeDiscoverTopLevel(boundary, root, extensions, label) {
   return discoverTopLevelFiles(root, extensions);
 }
 
-async function buildLayoutStages({ boundary, project, layout }) {
+async function buildLayoutStages({ boundary, project, layout, language }) {
   const stages = [];
   for (const section of layout.sections) {
     const artifacts = [];
@@ -161,6 +162,7 @@ async function buildLayoutStages({ boundary, project, layout }) {
         filePath,
         stageId: section.id,
         stageTitle: section.title,
+        language,
       }));
     }
     stages.push({ id: section.id, title: section.title, artifacts });
@@ -168,7 +170,7 @@ async function buildLayoutStages({ boundary, project, layout }) {
   return stages;
 }
 
-function mergeRelatedArtifacts(stages, artifacts) {
+function mergeRelatedArtifacts(stages, artifacts, language) {
   if (artifacts.length === 0) return;
   const stagedPaths = new Set(stages.flatMap((stage) => stage.artifacts.map((item) => windowsSafePathKey(item.path))));
   const additions = artifacts.filter((item) => {
@@ -186,12 +188,12 @@ function mergeRelatedArtifacts(stages, artifacts) {
   }
   stages.push({
     id: '99',
-    title: '関連レポート',
-    artifacts: additions.map((item) => ({ ...item, stageId: '99', stageTitle: '関連レポート' })),
+    title: reportText(language).relatedReports,
+    artifacts: additions.map((item) => ({ ...item, stageId: '99', stageTitle: reportText(language).relatedReports })),
   });
 }
 
-async function readRelatedArtifacts({ boundary, project, paths }) {
+async function readRelatedArtifacts({ boundary, project, paths, language }) {
   const artifacts = [];
   const seen = new Set();
   for (const filePath of paths) {
@@ -203,8 +205,9 @@ async function readRelatedArtifacts({ boundary, project, paths }) {
       project,
       filePath,
       stageId: '99',
-      stageTitle: '関連レポート',
+      stageTitle: reportText(language).relatedReports,
       explicit: true,
+      language,
     }));
   }
   return artifacts;
@@ -218,7 +221,7 @@ async function topLevelReportInputs({ boundary, reportsDir, output, manifestPath
     .filter((filePath) => !excluded.has(windowsSafePathKey(filePath)));
 }
 
-async function buildFallbackStages({ boundary, project, spec, topLevelInputs, includes }) {
+async function buildFallbackStages({ boundary, project, spec, topLevelInputs, includes, language }) {
   const markdownFiles = await safeDiscover(boundary, spec, ['.md'], 'Report spec directory');
   const stages = [];
   for (let index = 0; index < markdownFiles.length; index += 1) {
@@ -229,6 +232,7 @@ async function buildFallbackStages({ boundary, project, spec, topLevelInputs, in
       filePath: markdownFiles[index],
       stageId: id,
       stageTitle: '',
+      language,
     });
     if (isLegacyExecutiveSummaryArtifact(artifact)) continue;
     stages.push({ id, title: artifact.title, artifacts: [{ ...artifact, stageTitle: artifact.title }] });
@@ -237,7 +241,8 @@ async function buildFallbackStages({ boundary, project, spec, topLevelInputs, in
     boundary,
     project,
     paths: [...topLevelInputs, ...includes],
-  }));
+    language,
+  }), language);
   return stages;
 }
 
@@ -300,16 +305,17 @@ export async function buildReportInputModel({
   layoutPath,
   isExplicitLayout,
   includes,
+  language = 'ja',
 }) {
   await validateIncludes(boundary, includes);
   const layout = await loadLayout({ boundary, layoutPath, isExplicit: isExplicitLayout });
   const topLevelInputs = await topLevelReportInputs({ boundary, reportsDir, output, manifestPath, summaryOutputPath });
   const stages = layout
-    ? await buildLayoutStages({ boundary, project, layout })
-    : await buildFallbackStages({ boundary, project, spec, topLevelInputs, includes });
+    ? await buildLayoutStages({ boundary, project, layout, language })
+    : await buildFallbackStages({ boundary, project, spec, topLevelInputs, includes, language });
 
   if (layout) {
-    mergeRelatedArtifacts(stages, await readRelatedArtifacts({ boundary, project, paths: includes }));
+    mergeRelatedArtifacts(stages, await readRelatedArtifacts({ boundary, project, paths: includes, language }), language);
   }
   if (stages.length === 0) {
     throw new Error(`No Omnipotens artifacts found under ${spec}. Refusing to create an empty report.`);
@@ -322,7 +328,7 @@ export async function buildReportInputModel({
   const stagedPaths = new Set(stagedArtifacts.map((item) => windowsSafePathKey(item.path)));
   for (const filePath of [...specEvidence, ...topLevelInputs, ...includes]) {
     if (stagedPaths.has(windowsSafePathKey(filePath))) continue;
-    evidence.push(await readArtifact({ boundary, project, filePath, stageId: '', stageTitle: '' }));
+    evidence.push(await readArtifact({ boundary, project, filePath, stageId: '', stageTitle: '', language }));
   }
 
   return {

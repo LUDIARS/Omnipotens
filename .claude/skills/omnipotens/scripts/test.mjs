@@ -9,6 +9,7 @@ import { runReportHardeningTests } from './test-report-hardening.mjs';
 import { runReportPublicationTests } from './test-report-publication.mjs';
 import { writeAnalysisSummaryFixture } from './test-fixtures.mjs';
 import { normalizeAnalysisSummary } from './lib/analysis-summary.mjs';
+import { normalizeLanguage } from './lib/language.mjs';
 
 assert.match(renderMarkdown('# 見出し\n\n| A | B |\n|---|---|\n| 1 | **強調** |'), /class="table-scroll"/);
 assert.doesNotMatch(renderMarkdown('<script>alert(1)</script>'), /<script>/);
@@ -17,6 +18,9 @@ const documentedSummary = JSON.parse(await readFile(
   'utf8',
 ));
 assert.equal(normalizeAnalysisSummary(documentedSummary, 'ProjectName').schemaVersion, 4);
+assert.equal(normalizeLanguage('jp'), 'ja');
+assert.equal(normalizeLanguage('EN-us'), 'en');
+assert.throws(() => normalizeLanguage('fr'), /Unsupported report language/);
 
 const root = await mkdtemp(join(tmpdir(), 'omnipotens-'));
 try {
@@ -73,6 +77,7 @@ try {
   assert.ok(manifest.files.length >= 4);
   assert.ok(manifest.files.every((item) => /^[a-f0-9]{64}$/.test(item.sha256)));
   assert.equal(manifest.schemaVersion, 4);
+  assert.equal(manifest.language, 'ja');
   assert.deepEqual(manifest.stageReports.map((item) => item.stageId), ['04']);
   const summary = JSON.parse(await readFile(result.summary, 'utf8'));
   assert.equal(summary.schemaVersion, 4);
@@ -92,6 +97,18 @@ try {
   const fallback = await generateReport({ projectRoot: fallbackRoot });
   assert.equal(fallback.stages, 1);
   assert.doesNotMatch(await readFile(fallback.output, 'utf8'), /旧サマリ本文です/);
+  const englishRoot = join(root, 'english');
+  await mkdir(join(englishRoot, 'spec'), { recursive: true });
+  await writeFile(join(englishRoot, 'spec', 'only.md'), '# Only\n\nAvailable evidence.', 'utf8');
+  await writeAnalysisSummaryFixture(englishRoot);
+  const english = await generateReport({ projectRoot: englishRoot, language: 'en' });
+  const englishHtml = await readFile(english.output, 'utf8');
+  assert.match(englishHtml, /<html lang="en">/);
+  assert.match(englishHtml, /◐ Theme/);
+  assert.match(englishHtml, /Executive summary/);
+  assert.doesNotMatch(englishHtml, /◐ テーマ/);
+  assert.doesNotMatch(englishHtml, /エグゼクティブサマリ/);
+  assert.equal(JSON.parse(await readFile(english.manifest, 'utf8')).language, 'en');
   const emptyRoot = join(root, 'empty');
   await mkdir(emptyRoot);
   await assert.rejects(() => generateReport({ projectRoot: emptyRoot }), /No Omnipotens artifacts/);

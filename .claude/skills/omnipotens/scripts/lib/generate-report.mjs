@@ -5,6 +5,7 @@ import { createReportPathBoundary, windowsSafePathKey } from './report-path-boun
 import { publishReportGeneration } from './report-publication.mjs';
 import { renderFinalReport, renderStageReport } from './report-renderer.mjs';
 import { normalizeAnalysisSummary } from './analysis-summary.mjs';
+import { normalizeLanguage } from './language.mjs';
 
 function portable(value) {
   return value.replace(/\\/g, '/');
@@ -57,7 +58,7 @@ async function validatePublicationTargets(boundary, { reportsDir, finalOutput, m
   await assertReportOutputOwnership({ boundary, reportsDir, finalOutput, manifestPath, summaryOutputPath, stagesDir });
 }
 
-function renderGeneration({ projectTitle, stages, evidence, reportsDir, stagesDir, finalOutput, generatedAt, analysisSummary }) {
+function renderGeneration({ projectTitle, stages, evidence, reportsDir, stagesDir, finalOutput, generatedAt, analysisSummary, language }) {
   const stageOutputs = [];
   const stageReports = stages.map((stage) => {
     const filename = stageOutputFilename(stage);
@@ -69,7 +70,7 @@ function renderGeneration({ projectTitle, stages, evidence, reportsDir, stagesDi
     stageOutputs.push({ stageId: stage.id, path: portable(relative(reportsDir, targetPath)) });
     return {
       filename,
-      content: renderStageReport({ projectTitle, stage: { ...stage, artifacts }, generatedAt }),
+      content: renderStageReport({ projectTitle, stage: { ...stage, artifacts }, generatedAt, language }),
     };
   });
 
@@ -86,6 +87,7 @@ function renderGeneration({ projectTitle, stages, evidence, reportsDir, stagesDi
     generatedAt,
     sourceCount: evidence.length,
     analysisSummary,
+    language,
   });
   const sources = evidence.map((item) => ({
     stage: item.stageId || 'support',
@@ -96,6 +98,7 @@ function renderGeneration({ projectTitle, stages, evidence, reportsDir, stagesDi
   const manifest = {
     schemaVersion: 4,
     project: projectTitle,
+    language,
     ...(generatedAt ? { generatedAt } : {}),
     output: basename(finalOutput),
     summary: 'omnipotens-summary.json',
@@ -118,10 +121,12 @@ export async function generateReport({
   output,
   layoutPath,
   title,
+  language = 'ja',
   includes = [],
   generatedAt = '',
 }) {
   validateOptions({ projectRoot, specRoot, output, layoutPath, title, includes, generatedAt });
+  const reportLanguage = normalizeLanguage(language);
   const boundary = await createReportPathBoundary(resolve(projectRoot));
   const project = boundary.project;
   const spec = resolve(specRoot === undefined ? join(project, 'spec') : specRoot);
@@ -161,6 +166,7 @@ export async function generateReport({
     layoutPath: selectedLayoutPath,
     isExplicitLayout: layoutPath !== undefined,
     includes: resolvedIncludes,
+    language: reportLanguage,
   });
   if (!(await boundary.pathExists(summarySourcePath, 'Omnipotens analysis summary'))) {
     throw new Error(`Required Omnipotens analysis summary does not exist: ${summarySourcePath}`);
@@ -189,6 +195,7 @@ export async function generateReport({
     finalOutput,
     generatedAt: effectiveGeneratedAt,
     analysisSummary: { ...analysisSummary, generatedAt: analysisSummary.generatedAt || effectiveGeneratedAt },
+    language: reportLanguage,
   });
   await publishReportGeneration({
     ...publicationTargets,

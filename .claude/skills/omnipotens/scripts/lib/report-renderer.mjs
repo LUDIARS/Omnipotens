@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 import { escapeHtml, extractSummary, parseStatus, renderMarkdown } from './markdown.mjs';
+import { normalizeLanguage, reportText } from './language.mjs';
 
 const css = `
 :root{color-scheme:light;--bg:#f3f0e8;--paper:#fffdf8;--ink:#22231f;--muted:#6f716a;--line:#ded9cd;--gold:#9a6b1f;--gold-soft:#f6ead2;--red:#a33a31;--green:#2f714f;--shadow:0 15px 45px rgba(56,45,27,.10)}[data-theme=dark]{color-scheme:dark;--bg:#151511;--paper:#1e1e19;--ink:#f2eee4;--muted:#aaa79e;--line:#3b3930;--gold:#e0ae59;--gold-soft:#342b1d;--red:#ff8f84;--green:#7dd3a5;--shadow:none}
@@ -8,8 +9,9 @@ const css = `
 @media print{body{background:#fff}.shell{box-shadow:none;max-width:none}.top,.nav{display:none}.layout{display:block}.hero{padding:0 0 15px}.content{padding:0}.stage{break-before:page}.stage:first-of-type{break-before:auto}.document{break-inside:avoid-page}.related a{color:#000}}
 `;
 
-function chrome(title, hero, body, script = '') {
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)}</title><style>${css}</style></head><body><div class="shell"><header class="top"><span class="brand">OMNIPOTENS</span><span class="grow"></span><button data-theme type="button">◐ テーマ</button><button data-print type="button">⎙ 印刷</button></header>${hero}${body}</div><script>const r=document.documentElement;const s=localStorage.getItem('omnipotens-theme');if(s)r.dataset.theme=s;document.querySelector('button[data-theme]').onclick=()=>{r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';localStorage.setItem('omnipotens-theme',r.dataset.theme)};document.querySelector('button[data-print]').onclick=()=>print();${script}</script></body></html>`;
+function chrome(title, hero, body, language, script = '') {
+  const text = reportText(language);
+  return `<!doctype html><html lang="${escapeHtml(text.htmlLang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)}</title><style>${css}</style></head><body><div class="shell"><header class="top"><span class="brand">OMNIPOTENS</span><span class="grow"></span><button data-theme type="button">${escapeHtml(text.theme)}</button><button data-print type="button">${escapeHtml(text.print)}</button></header>${hero}${body}</div><script>const r=document.documentElement;const s=localStorage.getItem('omnipotens-theme');if(s)r.dataset.theme=s;document.querySelector('button[data-theme]').onclick=()=>{r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';localStorage.setItem('omnipotens-theme',r.dataset.theme)};document.querySelector('button[data-print]').onclick=()=>print();${script}</script></body></html>`;
 }
 
 function documentBlock(artifact) {
@@ -26,73 +28,78 @@ function generatedAtBadge(generatedAt) {
   return generatedAt ? `<span class="badge">${escapeHtml(generatedAt)}</span>` : '';
 }
 
-export function enrichArtifact(artifact, content) {
+export function enrichArtifact(artifact, content, language = 'ja') {
+  const text = reportText(language);
   if (artifact.kind === 'markdown') {
     const h1 = /^#\s+(.+)$/m.exec(content)?.[1]?.trim();
     return { ...artifact, content, title: h1 || basename(artifact.path, '.md'), summary: extractSummary(content), status: parseStatus(content) };
   }
   if (artifact.kind === 'json') {
-    return { ...artifact, content, data: JSON.parse(content), title: basename(artifact.path), summary: 'JSON manifest' };
+    return { ...artifact, content, data: JSON.parse(content), title: basename(artifact.path), summary: text.jsonManifest };
   }
-  return { ...artifact, content, title: basename(artifact.path), summary: 'Interactive HTML report' };
+  return { ...artifact, content, title: basename(artifact.path), summary: text.interactiveHtml };
 }
 
-export function renderStageReport({ projectTitle, stage, generatedAt }) {
+export function renderStageReport({ projectTitle, stage, generatedAt, language = 'ja' }) {
+  const reportLanguage = normalizeLanguage(language);
+  const text = reportText(reportLanguage);
   const readable = stage.artifacts.filter((item) => item.kind !== 'html');
   const linked = stage.artifacts.filter((item) => item.kind === 'html');
-  const summary = readable.map((item) => item.summary).find(Boolean) || `${stage.artifacts.length} artifacts`;
-  const hero = `<section class="hero"><div class="badges"><span class="badge">Stage ${escapeHtml(stage.id)}</span>${generatedAtBadge(generatedAt)}</div><h1>${escapeHtml(stage.title)}</h1><p>${escapeHtml(projectTitle)} — ${escapeHtml(summary)}</p></section>`;
-  const related = linked.length ? `<section><h2>関連HTML</h2><div class="related">${linked.map((item) => `<a href="${escapeHtml(item.outputHref)}">↗ ${escapeHtml(item.title)}<br><small>${escapeHtml(item.relativePath)}</small></a>`).join('')}</div></section>` : '';
-  return chrome(`${projectTitle} — ${stage.title}`, hero, `<main class="content">${readable.map(documentBlock).join('')}${related}</main>`);
+  const summary = readable.map((item) => item.summary).find(Boolean) || `${stage.artifacts.length} ${text.artifactUnit}`;
+  const hero = `<section class="hero"><div class="badges"><span class="badge">${escapeHtml(text.stage)} ${escapeHtml(stage.id)}</span>${generatedAtBadge(generatedAt)}</div><h1>${escapeHtml(stage.title)}</h1><p>${escapeHtml(projectTitle)} — ${escapeHtml(summary)}</p></section>`;
+  const related = linked.length ? `<section><h2>${escapeHtml(text.relatedHtml)}</h2><div class="related">${linked.map((item) => `<a href="${escapeHtml(item.outputHref)}">↗ ${escapeHtml(item.title)}<br><small>${escapeHtml(item.relativePath)}</small></a>`).join('')}</div></section>` : '';
+  return chrome(`${projectTitle} — ${stage.title}`, hero, `<main class="content">${readable.map(documentBlock).join('')}${related}</main>`, reportLanguage);
 }
 
-export function renderFinalReport({ projectTitle, stages, generatedAt, sourceCount, analysisSummary }) {
+export function renderFinalReport({ projectTitle, stages, generatedAt, sourceCount, analysisSummary, language = 'ja' }) {
+  const reportLanguage = normalizeLanguage(language);
+  const text = reportText(reportLanguage);
   const nav = `<nav class="nav">${stages.map((stage) => `<a href="#stage-${escapeHtml(stage.id)}"><b>${escapeHtml(stage.id)}</b> ${escapeHtml(stage.title)}</a>`).join('')}</nav>`;
   const stageCards = stages.map((stage) => {
-    const summary = stage.artifacts.map((item) => item.summary).find(Boolean) || `${stage.artifacts.length} artifacts`;
+    const summary = stage.artifacts.map((item) => item.summary).find(Boolean) || `${stage.artifacts.length} ${text.artifactUnit}`;
     const statuses = [...new Set(stage.artifacts.map((item) => item.status).filter(Boolean))];
-    return `<section class="stage" id="stage-${escapeHtml(stage.id)}" data-stage><div class="stage-head"><span class="stage-no">${escapeHtml(stage.id)}</span><div><h2>${escapeHtml(stage.title)}</h2><div class="badges"><span class="badge">${stage.artifacts.length} artifacts</span>${statuses.map((status) => `<span class="badge">${escapeHtml(status)}</span>`).join('')}</div></div></div><p class="summary">${escapeHtml(summary)}</p>${stage.artifacts.filter((item) => item.kind !== 'html').map(documentBlock).join('')}${stage.artifacts.some((item) => item.kind === 'html') ? `<h3>関連HTML</h3><div class="related">${stage.artifacts.filter((item) => item.kind === 'html').map((item) => `<a href="${escapeHtml(item.outputHref)}">↗ ${escapeHtml(item.title)}<br><small>${escapeHtml(item.relativePath)}</small></a>`).join('')}</div>` : ''}</section>`;
+    return `<section class="stage" id="stage-${escapeHtml(stage.id)}" data-stage><div class="stage-head"><span class="stage-no">${escapeHtml(stage.id)}</span><div><h2>${escapeHtml(stage.title)}</h2><div class="badges"><span class="badge">${stage.artifacts.length} ${escapeHtml(text.artifactUnit)}</span>${statuses.map((status) => `<span class="badge">${escapeHtml(status)}</span>`).join('')}</div></div></div><p class="summary">${escapeHtml(summary)}</p>${stage.artifacts.filter((item) => item.kind !== 'html').map(documentBlock).join('')}${stage.artifacts.some((item) => item.kind === 'html') ? `<h3>${escapeHtml(text.relatedHtml)}</h3><div class="related">${stage.artifacts.filter((item) => item.kind === 'html').map((item) => `<a href="${escapeHtml(item.outputHref)}">↗ ${escapeHtml(item.title)}<br><small>${escapeHtml(item.relativePath)}</small></a>`).join('')}</div>` : ''}</section>`;
   }).join('');
-  const hero = `<section class="hero"><div class="badges"><span class="badge">Final report</span>${generatedAtBadge(generatedAt)}</div><h1>${escapeHtml(projectTitle)}</h1><p>仕様、遊び、ドメイン、コード、メカニクス、UX、市場性、議論を、存在する証拠だけから統合した最終レポート。</p></section>`;
-  const overview = `<div class="overview"><div class="card"><div class="label">収録工程</div><div class="value">${stages.length}</div></div><div class="card"><div class="label">入力成果物</div><div class="value">${sourceCount}</div></div><div class="card"><div class="label">生成形式</div><div class="value">HTML</div></div></div><input class="search" type="search" placeholder="全工程を検索" aria-label="全工程を検索"><div class="empty-search">一致する工程がありません。</div>`;
-  const body = `<div class="layout">${nav}<main class="content">${overview}${renderAnalysisSummary(analysisSummary)}${stageCards}</main></div>`;
+  const hero = `<section class="hero"><div class="badges"><span class="badge">${escapeHtml(text.finalReport)}</span>${generatedAtBadge(generatedAt)}</div><h1>${escapeHtml(projectTitle)}</h1><p>${escapeHtml(text.finalDescription)}</p></section>`;
+  const overview = `<div class="overview"><div class="card"><div class="label">${escapeHtml(text.includedStages)}</div><div class="value">${stages.length}</div></div><div class="card"><div class="label">${escapeHtml(text.inputArtifacts)}</div><div class="value">${sourceCount}</div></div><div class="card"><div class="label">${escapeHtml(text.outputFormat)}</div><div class="value">HTML</div></div></div><input class="search" type="search" placeholder="${escapeHtml(text.searchPlaceholder)}" aria-label="${escapeHtml(text.searchPlaceholder)}"><div class="empty-search">${escapeHtml(text.emptySearch)}</div>`;
+  const body = `<div class="layout">${nav}<main class="content">${overview}${renderAnalysisSummary(analysisSummary, text)}${stageCards}</main></div>`;
   const script = `const q=document.querySelector('.search'),ss=[...document.querySelectorAll('[data-stage]')],empty=document.querySelector('.empty-search');q.oninput=()=>{const n=q.value.trim().toLocaleLowerCase();let shown=0;for(const s of ss){const hit=!n||s.textContent.toLocaleLowerCase().includes(n);s.hidden=!hit;if(hit)shown++}empty.style.display=shown?'none':'block'};const bs=[...document.querySelectorAll('[data-profile-button]')],ps=[...document.querySelectorAll('[data-profile]')];for(const b of bs)b.onclick=()=>{for(const x of bs)x.setAttribute('aria-selected',String(x===b));for(const p of ps)p.hidden=p.dataset.profile!==b.dataset.profileButton};`;
-  return chrome(`${projectTitle} — Omnipotens Final Report`, hero, body, script);
+  return chrome(`${projectTitle} — ${text.finalTitle}`, hero, body, reportLanguage, script);
 }
 
-function list(items) {
-  return items.length ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '<p>なし（現時点の証拠範囲）</p>';
+function list(items, text) {
+  return items.length ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : `<p>${escapeHtml(text.emptyEvidence)}</p>`;
 }
 
-function missingBlock(item) {
-  return `<div class="missing"><h4>不足情報</h4>${list(item.missingInformation)}<h4>不足実装</h4>${list(item.missingImplementation)}</div>`;
+function missingBlock(item, text) {
+  return `<div class="missing"><h4>${escapeHtml(text.missingInformation)}</h4>${list(item.missingInformation, text)}<h4>${escapeHtml(text.missingImplementation)}</h4>${list(item.missingImplementation, text)}</div>`;
 }
 
-function directionBlocks(summary, profile) {
+function directionBlocks(summary, profile, text) {
   return [...Object.values(summary.executiveSummary), ...summary.additionalAnalyses]
-    .map((item) => `<article class="direction"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item[profile])}</p>${missingBlock(item)}</article>`)
+    .map((item) => `<article class="direction"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item[profile])}</p>${missingBlock(item, text)}</article>`)
     .join('');
 }
 
-function scoreTable(title, rows, market = false) {
-  const cells = (items) => items.length ? items.map(escapeHtml).join('<br>') : 'なし（現時点の証拠範囲）';
-  const body = rows.map((row) => `<tr${market && row.marketAdvantage ? ' class="advantage"' : ''}><td>${market && row.marketAdvantage ? `<strong>${escapeHtml(row.label)}</strong>` : escapeHtml(row.label)}</td><td>${row.score} / ${row.maxScore}</td><td>${escapeHtml(row.rationale)}</td><td>${row.averageImprovement.decision === 'improve' ? '改善する' : '現状維持'}</td><td>${escapeHtml(row.averageImprovement.proposal)}<br><small>${escapeHtml(row.averageImprovement.rationale)}</small></td><td>${row.sourceRefs.map(escapeHtml).join('<br>')}</td><td>${cells(row.missingInformation)}</td><td>${cells(row.missingImplementation)}</td></tr>`).join('');
-  return `<section><h2>${escapeHtml(title)}</h2><div class="table-scroll"><table><thead><tr><th>評価項目</th><th>スコア</th><th>正直な診断</th><th>判断</th><th>平均的改善提案</th><th>参照</th><th>不足情報</th><th>不足実装</th></tr></thead><tbody>${body}</tbody></table></div></section>`;
+function scoreTable(title, rows, text, market = false) {
+  const cells = (items) => items.length ? items.map(escapeHtml).join('<br>') : escapeHtml(text.emptyEvidence);
+  const body = rows.map((row) => `<tr${market && row.marketAdvantage ? ' class="advantage"' : ''}><td>${market && row.marketAdvantage ? `<strong>${escapeHtml(row.label)}</strong>` : escapeHtml(row.label)}</td><td>${row.score} / ${row.maxScore}</td><td>${escapeHtml(row.rationale)}</td><td>${row.averageImprovement.decision === 'improve' ? escapeHtml(text.improve) : escapeHtml(text.maintain)}</td><td>${escapeHtml(row.averageImprovement.proposal)}<br><small>${escapeHtml(row.averageImprovement.rationale)}</small></td><td>${row.sourceRefs.map(escapeHtml).join('<br>')}</td><td>${cells(row.missingInformation)}</td><td>${cells(row.missingImplementation)}</td></tr>`).join('');
+  return `<section><h2>${escapeHtml(title)}</h2><div class="table-scroll"><table><thead><tr><th>${escapeHtml(text.evaluationItem)}</th><th>${escapeHtml(text.score)}</th><th>${escapeHtml(text.honestDiagnosis)}</th><th>${escapeHtml(text.decision)}</th><th>${escapeHtml(text.averageImprovement)}</th><th>${escapeHtml(text.reference)}</th><th>${escapeHtml(text.missingInformation)}</th><th>${escapeHtml(text.missingImplementation)}</th></tr></thead><tbody>${body}</tbody></table></div></section>`;
 }
 
-function renderAnalysisSummary(summary) {
+function renderAnalysisSummary(summary, text) {
   const overall = summary.overallAssessment;
   const novelty = summary.ludus.novelty;
-  const recommendations = summary.ludus.recommendedImplementations.map((item) => `<article class="direction"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.proposal)}</p><p><b>遊びの辞書:</b> ${item.dictionaryEntries.map(escapeHtml).join(' / ')}</p><p><b>UXへの接続:</b> ${escapeHtml(item.uxConnection)}</p><p><b>優先度:</b> ${escapeHtml(item.priority)}</p>${missingBlock(item)}</article>`).join('');
+  const recommendations = summary.ludus.recommendedImplementations.map((item) => `<article class="direction"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.proposal)}</p><p><b>${escapeHtml(text.playDictionary)}</b> ${item.dictionaryEntries.map(escapeHtml).join(' / ')}</p><p><b>${escapeHtml(text.uxConnection)}</b> ${escapeHtml(item.uxConnection)}</p><p><b>${escapeHtml(text.priority)}</b> ${escapeHtml(item.priority)}</p>${missingBlock(item, text)}</article>`).join('');
   const simulation = summary.uxEvaluation.publicResponseSimulation;
-  const uxSimulation = `<section><h2>UXスコア（AI平均反応シミュレーション）</h2><p><b>想定する大衆像:</b> ${escapeHtml(simulation.audienceModel)}</p><p><b>前提:</b> ${simulation.assumptions.map(escapeHtml).join(' / ')}</p><p><b>限界:</b> ${simulation.limitations.map(escapeHtml).join(' / ')}</p>${scoreTable('UXの2軸', summary.uxEvaluation.scores)}</section>`;
-  const noveltyImprovement = `<p><b>判断:</b> ${novelty.averageImprovement.decision === 'improve' ? '改善する' : '現状維持'} — ${escapeHtml(novelty.averageImprovement.proposal)}<br><small>${escapeHtml(novelty.averageImprovement.rationale)}</small></p>`;
+  const uxSimulation = `<section><h2>${escapeHtml(text.uxSimulation)}</h2><p><b>${escapeHtml(text.audienceModel)}</b> ${escapeHtml(simulation.audienceModel)}</p><p><b>${escapeHtml(text.assumptions)}</b> ${simulation.assumptions.map(escapeHtml).join(' / ')}</p><p><b>${escapeHtml(text.limitations)}</b> ${simulation.limitations.map(escapeHtml).join(' / ')}</p>${scoreTable(text.uxAxes, summary.uxEvaluation.scores, text)}</section>`;
+  const noveltyImprovement = `<p><b>${escapeHtml(text.decision)}:</b> ${novelty.averageImprovement.decision === 'improve' ? escapeHtml(text.improve) : escapeHtml(text.maintain)} — ${escapeHtml(novelty.averageImprovement.proposal)}<br><small>${escapeHtml(novelty.averageImprovement.rationale)}</small></p>`;
   const profilePanel = (profile, hidden = false) => {
     const assessment = overall[profile];
-    const overallBlock = `<article class="overall-assessment"><h3>総合評価：${escapeHtml(overall.label)}</h3><p class="overall-score">${overall.score} / ${overall.maxScore}</p><p>${escapeHtml(assessment.summary)}</p><h4>主な強み</h4>${list(assessment.strengths)}<h4>優先して解く課題</h4>${list(assessment.priorityIssues)}<p><b>評価の確度:</b> ${escapeHtml(overall.confidence)}</p><p><b>参照:</b> ${overall.sourceRefs.map(escapeHtml).join(' / ')}</p>${missingBlock(overall)}</article>`;
-    return `<div class="profile-panel" data-profile="${profile}"${hidden ? ' hidden' : ''}>${overallBlock}<h3>各項目のまとめ</h3>${directionBlocks(summary, profile)}</div>`;
+    const overallBlock = `<article class="overall-assessment"><h3>${escapeHtml(text.overallAssessment)}${escapeHtml(overall.label)}</h3><p class="overall-score">${overall.score} / ${overall.maxScore}</p><p>${escapeHtml(assessment.summary)}</p><h4>${escapeHtml(text.strengths)}</h4>${list(assessment.strengths, text)}<h4>${escapeHtml(text.priorityIssues)}</h4>${list(assessment.priorityIssues, text)}<p><b>${escapeHtml(text.confidence)}</b> ${escapeHtml(overall.confidence)}</p><p><b>${escapeHtml(text.reference)}</b> ${overall.sourceRefs.map(escapeHtml).join(' / ')}</p>${missingBlock(overall, text)}</article>`;
+    return `<div class="profile-panel" data-profile="${profile}"${hidden ? ' hidden' : ''}>${overallBlock}<h3>${escapeHtml(text.itemSummary)}</h3>${directionBlocks(summary, profile, text)}</div>`;
   };
-  const executive = `<section class="executive-summary"><h2>エグゼクティブサマリ</h2><div class="profile-switch" role="tablist" aria-label="表示の詳しさ"><button type="button" data-profile-button="beginner" aria-selected="true">学生・初学者向け</button><button type="button" data-profile-button="highResolution" aria-selected="false">高解像度データ</button></div>${profilePanel('beginner')}${profilePanel('highResolution', true)}</section>`;
-  const boundary = '<section class="analysis-boundary"><h2>各レイヤでの解析データは以下</h2><p>ここから先は、エグゼクティブサマリの根拠となる評価値、実装証拠、不足情報、不足実装をレイヤごとに示します。</p></section>';
-  return `${executive}${boundary}${scoreTable('遊びの構造スコア', summary.playStructureScores)}${uxSimulation}${scoreTable('AI Format スコア', summary.aiFormatScores)}${scoreTable('Vitia 市場性スコア（高い順）', summary.vitiaScores, true)}<section><h2>Ludusの新規性評価</h2><p><b>${novelty.score} / ${novelty.maxScore}</b> — ${escapeHtml(novelty.rationale)}</p>${noveltyImprovement}${missingBlock(novelty)}<h2>遊びの辞書からUXへつなぐ実装提案</h2>${recommendations}</section>`;
+  const executive = `<section class="executive-summary"><h2>${escapeHtml(text.executiveSummary)}</h2><div class="profile-switch" role="tablist" aria-label="${escapeHtml(text.displayDetail)}"><button type="button" data-profile-button="beginner" aria-selected="true">${escapeHtml(text.beginner)}</button><button type="button" data-profile-button="highResolution" aria-selected="false">${escapeHtml(text.highResolution)}</button></div>${profilePanel('beginner')}${profilePanel('highResolution', true)}</section>`;
+  const boundary = `<section class="analysis-boundary"><h2>${escapeHtml(text.analysisBoundary)}</h2><p>${escapeHtml(text.analysisBoundaryDescription)}</p></section>`;
+  return `${executive}${boundary}${scoreTable(text.playStructureScores, summary.playStructureScores, text)}${uxSimulation}${scoreTable(text.aiFormatScores, summary.aiFormatScores, text)}${scoreTable(text.vitiaScores, summary.vitiaScores, text, true)}<section><h2>${escapeHtml(text.novelty)}</h2><p><b>${novelty.score} / ${novelty.maxScore}</b> — ${escapeHtml(novelty.rationale)}</p>${noveltyImprovement}${missingBlock(novelty, text)}<h2>${escapeHtml(text.recommendations)}</h2>${recommendations}</section>`;
 }

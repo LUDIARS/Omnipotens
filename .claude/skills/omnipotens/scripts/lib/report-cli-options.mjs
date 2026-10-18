@@ -4,6 +4,7 @@ const SINGLE_VALUE_OPTIONS = new Set([
   'output',
   'layout',
   'title',
+  'language',
   'generated-at',
 ]);
 const REPEATABLE_OPTIONS = new Set(['include']);
@@ -27,7 +28,7 @@ export function parseReportArgs(argv) {
       throw new Error(`unexpected argument: ${String(current)}`);
     }
 
-    const option = current.slice(2);
+    const option = current === '--lang' ? 'language' : current.slice(2);
     if (!SINGLE_VALUE_OPTIONS.has(option) && !REPEATABLE_OPTIONS.has(option)) {
       throw new Error(`unknown option: --${option}`);
     }

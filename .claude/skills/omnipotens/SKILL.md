@@ -7,6 +7,12 @@ description: Plan and run a selectable, evidence-linked game analysis with disti
 
 Produce an evidence-linked review that connects game intent, rules, implementation, UX, and commercial promise. Keep source facts, analyst inferences, and unresolved questions visibly separate.
 
+## Select the output language
+
+- Use an explicitly requested report language when the user provides one; otherwise use the analysis prompt language.
+- Pass the resolved `ja` or `en` value to the deterministic packager with `--language`. Direct packager calls default to `ja`.
+- Keep quoted evidence and source documents in their original language. The language setting controls generated UI and does not authorize silent translation of evidence.
+
 ## Use the stable report format
 
 - Write analysis prose primarily in Japanese. Explain a necessary English proper noun or technical term in Japanese on first use.
@@ -158,12 +164,12 @@ The eleven stages remain the core dependency graph. Execute only the selected st
 Run the deterministic packager:
 
 ```powershell
-node <skill>/scripts/omnipotens-report.mjs --project <project-root> [--spec <spec-dir>] [--output <final.html>] [--layout <layout.json>] [--title <project-name>] [--include <extra.md|html|json>]
+node <skill>/scripts/omnipotens-report.mjs --project <project-root> [--spec <spec-dir>] [--output <final.html>] [--layout <layout.json>] [--title <project-name>] [--language <ja|en>] [--include <extra.md|html|json>]
 ```
 
 Repeat `--include` for review artifacts stored outside the standard `spec/` layout. Report generation packages evidence; it does not change a partial run into a completed analysis.
 
-The packager uses only Node.js standard modules. It recursively discovers AI Format categories, renders the configured sections or each Markdown source, links specialized HTML/JSON, and writes a hash manifest. The default layout path is `spec/data/omnipotens-report-layout.json`. Mermaid blocks remain readable source in the generic renderer; use the specialized Anatomia HTML for interactive graphs. This command produces the detailed HTML package, not the PDF or sharing HTML; the documentation skill owns those subsequent outputs and their generation record. If PDF rendering is unavailable, keep the completed HTML and report PDF generation as blocked instead of declaring document delivery complete.
+The packager uses only Node.js standard modules. It recursively discovers AI Format categories, renders the configured sections or each Markdown source, links specialized HTML/JSON, and writes a hash manifest. The normalized language is recorded in the manifest. The default layout path is `spec/data/omnipotens-report-layout.json`. Mermaid blocks remain readable source in the generic renderer; use the specialized Anatomia HTML for interactive graphs. This command produces the detailed HTML package, not the PDF or sharing HTML; the documentation skill owns those subsequent outputs and their generation record. If PDF rendering is unavailable, keep the completed HTML and report PDF generation as blocked instead of declaring document delivery complete.
 
 ## Run selected service domains
 

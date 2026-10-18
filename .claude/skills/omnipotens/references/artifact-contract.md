@@ -101,6 +101,7 @@ For human-facing delivery, [omnipotens-documentation](../../omnipotens-documenta
 - Every scored item must contain a score-aware `improve` or `hold` decision and an honest, proportionate average-improvement rationale. Do not force changes to already coherent work.
 - Every project must include the two fixed UX simulation scores and the three fixed play-structure scores defined in `report-format.md`.
 - Record every included source path and SHA-256 hash in `omnipotens-final.manifest.json`.
+- Record the normalized final-report language (`ja` or `en`) in `omnipotens-final.manifest.json`.
 
 ## Stage 8 Vitia-backed UX contract
 

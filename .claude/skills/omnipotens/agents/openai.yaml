@@ -1,4 +1,4 @@
 interface:
   display_name: "Omnipotens"
   short_description: "Selectable full-spectrum game and service analysis"
-  default_prompt: "Use $omnipotens to identify whether the decision concerns new development or operations, select the relevant game and service analyses, and produce an evidence-linked report. Apply the operations-only review criteria only to operations decisions."
+  default_prompt: "Use $omnipotens to identify whether the decision concerns new development or operations, select the relevant game and service analyses, and produce an evidence-linked report. Apply the operations-only review criteria only to operations decisions. Use the language of my prompt for the report unless I explicitly request another supported language."

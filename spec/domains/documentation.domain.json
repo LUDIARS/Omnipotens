@@ -9,6 +9,6 @@
     { "pathPattern": "(^|/)\\.claude/skills/omnipotens/references/(artifact-contract|report-format)\\.md$" },
     { "pathPattern": "(^|/)spec/feature/documentation\\.md$" },
     { "pathPattern": "(^|/)spec/domains/documentation\\.domain\\.json$" },
-    { "pathPattern": "^README\\.md$" }
+    { "pathPattern": "(^|/)README\\.md$" }
   ]
 }
